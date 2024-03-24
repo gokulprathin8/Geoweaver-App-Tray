@@ -7,6 +7,7 @@ import (
 	"github.com/getlantern/systray"
 	"image/png"
 	"os"
+	"path/filepath"
 )
 
 var serverStarted bool = false
@@ -91,6 +92,7 @@ func onReady() {
 		systray.Quit()
 	}()
 
+	// handle server start and stop
 	go func() {
 		for {
 			<-startServer.ClickedCh
@@ -98,6 +100,10 @@ func onReady() {
 			if serverStarted {
 				startServer.SetTitle("Start server")
 				serverStarted = false
+				err := utils.KillGeoweaverProcesses()
+				if err != nil {
+					panic("Failed to stop geoweaver server")
+				}
 			} else {
 				startServer.SetTitle("Stop server")
 				serverStarted = true
@@ -105,11 +111,27 @@ func onReady() {
 				err := utils.DownloadFile(utils.GEOWEAVER_JAR_URL, homeDir)
 				if err != nil {
 					panic("Unable to download file")
+				} else {
+					geoweaverJarPath := filepath.Join(homeDir, "geoweaver.jar")
+					err := utils.RunJavaJar(geoweaverJarPath)
+					if err != nil {
+						panic("Failed to start geoweaver jar file")
+					}
 				}
 			}
 		}
 	}()
 
+	// handle URL open
+	go func() {
+		for {
+			<-openBrowser.ClickedCh
+			err := utils.OpenURLInBrowser("http://localhost:8070/Geoweaver")
+			if err != nil {
+				panic("Failed to open browser")
+			}
+		}
+	}()
 }
 
 func onExit() {

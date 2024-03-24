@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -56,4 +57,19 @@ func RunJavaJar(jarPath string) error {
 	cmd := exec.Command("java", "-jar", jarPath)
 	cmd.Dir = filepath.Dir(jarPath)
 	return cmd.Run()
+}
+
+func OpenURLInBrowser(url string) error {
+	var err error
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = exec.Command("xdg-open", url).Start() // Fallback for other UNIX-like OSes
+	}
+	return err
 }
