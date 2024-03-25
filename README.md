@@ -1,6 +1,6 @@
 # Geoweaver Application Tray
 
-![alt text]([https://github.com/[username]/[reponame]/blob/[branch]/image.jpg?raw=true](https://github.com/gokulprathin8/Geoweaver-App-Tray/blob/main/github-assets/img.png?raw=true))
+![alt text]([https://github.com/gokulprathin8/Geoweaver-App-Tray/blob/main/github-assets/img.png?raw=true)](https://github.com/gokulprathin8/Geoweaver-App-Tray/blob/main/github-assets/img.png?raw=true))
 
 The Geoweaver Application Tray is a lightweight, efficient system tray application for managing the Geoweaver workflow management tool directly from your desktop. Geoweaver is designed to automate, record history, and manage complex scientific workflows, seamlessly integrating online spatial data facilities, high-performance computation platforms, and open-source libraries within web browsers.
 
