@@ -23,7 +23,7 @@ This tray application enhances the Geoweaver experience by offering quick access
 1. Clone this repository to your local machine:
 
 ```bash
-git clone https://github.com/yourusername/geoweaver-application-tray.git
+git clonehttps://github.com/gokulprathin8/Geoweaver-App-Tray.git
 ```
 
 2. Navigate to the cloned directory:
