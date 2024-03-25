@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 const GEOWEAVER_JAR_URL string = "https://github.com/ESIPFed/Geoweaver/releases/download/latest/geoweaver.jar"
@@ -37,12 +38,17 @@ func KillGeoweaverProcesses() error {
 }
 
 func DownloadFile(url, path string) error {
-	resp, err := http.Get(url)
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+	resp, err := client.Get(url)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to download file: %s", resp.Status)
+	}
 	out, err := os.Create(path)
 	if err != nil {
 		return err

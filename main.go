@@ -6,8 +6,10 @@ import (
 	"geoweaver-systray/utils"
 	"github.com/getlantern/systray"
 	"image/png"
+	"log"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 var serverStarted bool = false
@@ -88,36 +90,58 @@ func onReady() {
 	go func() {
 		<-quitMenu.ClickedCh
 		fmt.Print("Requesting quit")
-		_ = utils.KillGeoweaverProcesses() // no need to handle error here since the process may not be running
+		_ = utils.KillGeoweaverProcesses()
 		systray.Quit()
 	}()
 
 	// handle server start and stop
 	go func() {
+		var mutex sync.Mutex
+
 		for {
 			<-startServer.ClickedCh
-			fmt.Print(startServer, serverStarted)
-			if serverStarted {
+
+			mutex.Lock()
+			currentState := serverStarted
+			mutex.Unlock()
+
+			if currentState {
 				startServer.SetTitle("Start server")
-				serverStarted = false
+
 				err := utils.KillGeoweaverProcesses()
 				if err != nil {
-					panic("Failed to stop geoweaver server")
+					log.Printf("Failed to stop geoweaver server: %v", err)
+					continue
 				}
+
+				mutex.Lock()
+				serverStarted = false
+				mutex.Unlock()
 			} else {
 				startServer.SetTitle("Stop server")
-				serverStarted = true
-				homeDir, _ := os.UserHomeDir()
-				err := utils.DownloadFile(utils.GEOWEAVER_JAR_URL, homeDir)
+
+				homeDir, err := os.UserHomeDir()
 				if err != nil {
-					panic("Unable to download file")
-				} else {
-					geoweaverJarPath := filepath.Join(homeDir, "geoweaver.jar")
-					err := utils.RunJavaJar(geoweaverJarPath)
-					if err != nil {
-						panic("Failed to start geoweaver jar file")
-					}
+					log.Printf("Failed to get home directory: %v", err)
+					continue
 				}
+
+				geoweaverJarPath := filepath.Join(homeDir, "geoweaver.jar")
+				err = utils.DownloadFile(utils.GEOWEAVER_JAR_URL, geoweaverJarPath)
+				if err != nil {
+					log.Printf("Unable to download geoweaver.jar: %v", err)
+					continue
+				}
+
+				err = utils.RunJavaJar(geoweaverJarPath)
+				if err != nil {
+					log.Printf("Failed to start geoweaver jar file: %v", err)
+					continue
+				}
+
+				mutex.Lock()
+				serverStarted = true
+				mutex.Unlock()
 			}
 		}
 	}()
@@ -129,6 +153,22 @@ func onReady() {
 			err := utils.OpenURLInBrowser("http://localhost:8070/Geoweaver")
 			if err != nil {
 				panic("Failed to open browser")
+			}
+		}
+	}()
+
+	// handle restart
+	go func() {
+		for {
+			<-restartServer.ClickedCh
+
+			_ = utils.KillGeoweaverProcesses()
+
+			homeDir, _ := os.UserHomeDir()
+			geoweaverJarPath := filepath.Join(homeDir, "geoweaver.jar")
+			err := utils.RunJavaJar(geoweaverJarPath)
+			if err != nil {
+				panic("Unable to start geoweaver")
 			}
 		}
 	}()
